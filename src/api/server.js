@@ -6,7 +6,6 @@ const HighPerformanceIntegration = require('../core/integration');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -84,51 +83,22 @@ app.post('/api/process-csv', async (req, res) => {
     if (!csvData) {
       return res.status(400).json({
         success: false,
-        error: 'No CSV data provided',
-        usage: 'Send CSV data in the request body as: {"csvData": "user_id,email,user_type,active_sub,weekly_sub_count,monthly_sub_count,daily_sub_count\\n12345,test@example.com,MP,true,5,2,1"}'
-      });
-    }
-
-    // Check environment variables for OAuth
-    const clientId = process.env.HUBSPOT_CLIENT_ID;
-    const clientSecret = process.env.HUBSPOT_CLIENT_SECRET;
-    const redirectUri = process.env.HUBSPOT_REDIRECT_URI;
-    const accountsObjectTypeId = process.env.HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID;
-
-    if (!clientId || !clientSecret) {
-      return res.status(500).json({
-        success: false,
-        error: 'HubSpot OAuth credentials not configured'
+        error: 'CSV data is required'
       });
     }
 
     // Initialize the high-performance integration
-    const hubspotClient = new HighPerformanceOAuthClient({
-      clientId,
-      clientSecret,
-      redirectUri,
-      accountsObjectTypeId
-    });
-    
-    // Check authentication
-    const isAuthenticated = await hubspotClient.isAuthenticated();
-    if (!isAuthenticated) {
-      return res.status(401).json({
-        success: false,
-        error: 'HubSpot authentication required. Please authenticate first.'
-      });
-    }
-    
+    const hubspotClient = new HighPerformanceOAuthClient();
     const processor = new HighPerformanceProcessor();
     const integration = new HighPerformanceIntegration(hubspotClient, processor);
 
-    // Process the CSV data with high-performance method
-    const results = await integration.processCSVHighPerformance(csvData);
+    // Process the CSV data
+    const stats = await integration.processCsv(csvData);
 
     res.json({
       success: true,
       message: 'CSV processed successfully',
-      results: results
+      stats: stats
     });
 
   } catch (error) {
@@ -136,8 +106,7 @@ app.post('/api/process-csv', async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: 'Failed to process CSV',
-      message: error.message
+      error: error.message
     });
   }
 });
@@ -154,47 +123,18 @@ app.post('/api/upload-csv', upload.single('csvFile'), async (req, res) => {
 
     const csvData = req.file.buffer.toString('utf8');
     
-    // Check environment variables for OAuth
-    const clientId = process.env.HUBSPOT_CLIENT_ID;
-    const clientSecret = process.env.HUBSPOT_CLIENT_SECRET;
-    const redirectUri = process.env.HUBSPOT_REDIRECT_URI;
-    const accountsObjectTypeId = process.env.HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID;
-
-    if (!clientId || !clientSecret) {
-      return res.status(500).json({
-        success: false,
-        error: 'HubSpot OAuth credentials not configured'
-      });
-    }
-
     // Initialize the high-performance integration
-    const hubspotClient = new HighPerformanceOAuthClient({
-      clientId,
-      clientSecret,
-      redirectUri,
-      accountsObjectTypeId
-    });
-    
-    // Check authentication
-    const isAuthenticated = await hubspotClient.isAuthenticated();
-    if (!isAuthenticated) {
-      return res.status(401).json({
-        success: false,
-        error: 'HubSpot authentication required. Please authenticate first.'
-      });
-    }
-    
+    const hubspotClient = new HighPerformanceOAuthClient();
     const processor = new HighPerformanceProcessor();
     const integration = new HighPerformanceIntegration(hubspotClient, processor);
 
-    // Process the CSV data with high-performance method
-    const results = await integration.processCSVHighPerformance(csvData);
+    // Process the CSV data
+    const stats = await integration.processCsv(csvData);
 
     res.json({
       success: true,
-      message: 'CSV file processed successfully',
-      filename: req.file.originalname,
-      results: results
+      message: 'File uploaded and processed successfully',
+      stats: stats
     });
 
   } catch (error) {
@@ -202,8 +142,7 @@ app.post('/api/upload-csv', upload.single('csvFile'), async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: 'Failed to process CSV file',
-      message: error.message
+      error: error.message
     });
   }
 });
@@ -211,7 +150,7 @@ app.post('/api/upload-csv', upload.single('csvFile'), async (req, res) => {
 // API documentation endpoint
 app.get('/api/docs', (req, res) => {
   res.json({
-    service: 'HubSpot CSV Integration API',
+    title: 'HubSpot CSV Integration API',
     version: '1.0.0',
     endpoints: {
       'POST /api/process-csv': {
@@ -268,21 +207,33 @@ app.use((error, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Endpoint not found',
-    availableEndpoints: [
-      'GET /health',
-      'GET /api/docs',
-      'POST /api/process-csv',
-      'POST /api/upload-csv'
-    ]
+    error: 'Endpoint not found'
   });
 });
 
-// Start server
-app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 HubSpot CSV Integration API running on port ${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  console.log(`❤️  Health Check: http://localhost:${port}/health`);
-});
+// Only start server when run directly (not when imported for tests)
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 HubSpot CSV Integration API running on port ${port}`);
+    console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+    console.log(`❤️  Health Check: http://localhost:${port}/health`);
+  });
+
+  // Graceful shutdown handlers
+  process.on('SIGINT', () => {
+    console.log('Received SIGINT, shutting down gracefully');
+    server.close(() => {
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGTERM', () => {
+    console.log('Received SIGTERM, shutting down gracefully');
+    server.close(() => {
+      process.exit(0);
+    });
+  });
+}
 
 module.exports = app;

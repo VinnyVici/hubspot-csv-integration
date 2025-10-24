@@ -422,23 +422,6 @@ class HighPerformanceOAuthClient {
       this.associationTypeId = 1;  // Standard "primary" association
       return this.associationTypeId;
       
-      // Find the association type for contacts to our custom object
-      const contactToCustomObject = response.results.find(schema => 
-        schema.fromObjectTypeId === 'contacts' && 
-        schema.toObjectTypeId === this.accountsObjectTypeId
-      );
-      
-      if (contactToCustomObject && contactToCustomObject.associationTypeId) {
-        this.associationTypeId = contactToCustomObject.associationTypeId;
-        console.log(`✅ Found association type ID: ${this.associationTypeId}`);
-        return this.associationTypeId;
-      }
-      
-      // Fallback to a commonly used association type
-      console.log('⚠️ Using fallback association type ID: 1');
-      this.associationTypeId = 1;
-      return this.associationTypeId;
-      
     } catch (error) {
       console.error('Error getting association type ID:', error);
       // Use fallback
