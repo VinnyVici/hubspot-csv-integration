@@ -1,175 +1,96 @@
-# CLAUDE.md
+# CLAUDE.md - Development Context
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-This is a HubSpot CSV integration that provides two deployment modes:
-1. **Standalone CLI** - Direct Node.js script execution
-2. **Dockerized HTTP API** - Containerized web service for automation
+HubSpot CSV integration with enterprise-grade performance optimization:
+1. **CLI Mode** - Direct Node.js script execution (`src/cli/cli.js`)
+2. **HTTP API** - Containerized web service (`src/api/server.js`)
+3. **Docker** - Production containerization (`docker/`)
 
-The integration processes CSV files to create/update HubSpot contacts and companies, automatically associating contacts with their respective companies based on company names.
+Processes CSV files to create/update HubSpot Accounts and Contacts with automatic associations.
 
 ## Core Architecture
 
-The codebase follows a modular architecture with three main processing components:
-
 ### Processing Pipeline
-1. **CSVProcessor** (`csv-processor.js`) - Parses CSV data and maps flexible column names to HubSpot properties
-2. **HubSpotClient** (`hubspot-client.js`) - Handles all HubSpot API interactions (search, create, update, associate)
-3. **HubSpotIntegration** (`integration.js`) - Orchestrates the entire process and manages statistics
+1. **Processor** (`src/core/processor.js`) - CSV parsing, data validation, batch grouping
+2. **OAuth Client** (`src/core/oauth-client.js`) - HubSpot API interactions (CRUD, search, associate)
+3. **Integration** (`src/core/integration.js`) - Orchestrates workflow and statistics
 
 ### Data Flow
-- CSV data is parsed and validated
-- Contacts are grouped by their associated companies
-- Companies are processed first (create/update based on name)
-- Contacts are processed second (create/update based on email)
-- Contacts are automatically associated with their companies
-- Processing statistics are collected and reported
+- CSV data parsed and validated
+- Records categorized (create vs update) via existence checking
+- Batch processing: Accounts → Contacts → Associations
+- Smart filtering: Only processes active subscriptions + status changes
+- Real-time statistics and error handling
 
 ## Key Commands
 
-### Development and Testing
 ```bash
-# Install dependencies
+# Development
 npm install
-
-# Test with sample data
 npm test
+npm run process-csv data.csv
 
-# Run standalone integration
-npm run standalone path/to/file.csv
-
-# Start HTTP API server
-npm start
-# or
-npm run dev
+# Production
+npm start                    # HTTP API
+cd docker && docker-compose up -d   # Docker deployment
 ```
 
-### Docker Operations
-```bash
-# Build and run containerized API
-docker-compose up --build
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-
-# Build image manually
-docker build -t hubspot-csv-integration .
-```
-
-### HubSpot CLI (Legacy - for reference)
-```bash
-# Authenticate HubSpot CLI
-hs auth
-
-# Deploy HubSpot app
-hs project deploy
-
-# Local HubSpot development
-hs project dev
-```
+## Deployment Reference
+**Complete setup guide:** See [DEPLOYMENT.md](../DEPLOYMENT.md) for step-by-step HubSpot configuration.
 
 ## Environment Configuration
 
-### Required Environment Variables
-- `HUBSPOT_ACCESS_TOKEN` - HubSpot private app access token
-- `HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID` - Custom object type ID (format: `2-123456`)
+**Required Variables:**
+- `HUBSPOT_ACCESS_TOKEN` - HubSpot private app token  
+- `HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID` - Custom object ID (format: `2-123456`)
 
-### Setup Process
-1. Create `.env` file from `.env.example`
-2. Create HubSpot private app with required scopes:
-   - `crm.objects.contacts.read/write`
-   - `crm.objects.companies.read/write`
-3. Get access token and accounts object type ID
-4. Update `.env` with actual values
+**Setup:** See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete HubSpot private app configuration.
 
-## CSV Data Mapping
+## CSV Data Processing
 
-The system processes CSV files with the following exact field mapping specification:
+**Account Creation (Primary: `user_id`):**
+- `user_type`: MP→MP, WIX→USAMPS  
+- `active_sub` → `active_subscription` (boolean)
+- Subscription counts → number fields
+- Ignored: `email`, `total_sub_count`, `_id`
 
-### CSV to Accounts Custom Object
-| CSV Field | HubSpot Accounts Property | Type | Notes |
-|-----------|---------------------------|------|-------|
-| `user_id` | `id` | string | **Primary key** |
-| `user_type` | `account_type` | single select | **MP→MP, WIX→USAMPS** |
-| `active_sub` | `active_subscription` | boolean | Subscription status |
-| `weekly_sub_count` | `weekly_subscriptions` | number | Weekly subscription count |
-| `monthly_sub_count` | `monthly_subscriptions` | number | Monthly subscription count |
-| `daily_sub_count` | `daily_subscriptions` | number | Daily subscription count |
+**Contact Creation (Primary: `email`):**
+- `user_type`: Mapped same as accounts (multiselect)
+- Automatic association with matching Account
 
-**Ignored CSV Fields for Accounts**: `email`, `total_sub_count`, `_id`
+**Workflow:**
+1. Update existing Accounts (by `user_id`)
+2. Create new Accounts if needed
+3. Search/create Contacts (by `email`)  
+4. Associate Contacts with Accounts
 
-### CSV to Contacts Object  
-| CSV Field | HubSpot Contact Property | Type | Notes |
-|-----------|--------------------------|------|-------|
-| `email` | `email` | string | **Primary key** |
-| `user_type` | `user_type` | multiselect | **Same options as account_type, can add to but don't overwrite existing** |
-
-**Ignored CSV Fields for Contacts**: Names are ignored
-
-### Integration Workflow
-1. **Update existing Accounts** (by `user_id`) → **overwrite all subscription values**
-2. **Create new Accounts** if they don't exist  
-3. **If new account created** → search for Contact by `email`
-4. **If Contact exists** → associate with new Account
-5. **If Contact doesn't exist** → create Contact + associate with new Account
-
-### Account Type Mapping
-- **MP** → **MP**
-- **WIX** → **USAMPS**
-
-## API Endpoints (HTTP Mode)
+## API Endpoints
 
 - `GET /health` - Health check
-- `GET /api/docs` - API documentation
-- `POST /api/process-csv` - Process CSV data (JSON body)
-- `POST /api/upload-csv` - Upload CSV file (multipart)
+- `GET /api/docs` - API documentation  
+- `POST /api/process-csv` - Process CSV data
+- `POST /api/upload-csv` - Upload CSV file
 
-## File Structure Context
+## File Structure
 
-- **Root level**: Standalone integration files and Docker configuration
-- **src/app/**: Legacy HubSpot app platform files (reference only)
-- **server.js**: Express.js HTTP API wrapper
-- **standalone-integration.js**: CLI version with direct file processing
-- **sample-data.csv**: Test data for development
-
-## Integration Modes
-
-### Standalone Mode
-Use for direct CSV file processing or cron jobs:
-```bash
-node standalone-integration.js data.csv
+```
+src/core/     # Integration logic
+src/api/      # HTTP server  
+src/cli/      # Command line
+docker/       # Containerization
+tests/        # Test suite
 ```
 
-### API Mode
-Use for web automation, webhooks, or external integrations:
-```bash
-docker-compose up -d
-curl -X POST http://localhost:3000/api/process-csv -d '{"csvData": "..."}'
-```
+## Technical Notes
 
-## Error Handling Strategy
+- **Error Handling**: Graceful degradation, continues on individual failures
+- **Performance**: Smart filtering, batch operations, rate limiting
+- **Deployment**: Docker-ready, stateless, horizontally scalable
+- **Monitoring**: Health endpoints, structured logging
 
-The integration includes comprehensive error handling:
-- Email validation for contacts
-- Required field validation
-- HubSpot API error management
-- Detailed error statistics and logging
-- Graceful degradation (continues processing on individual record errors)
+## Development Context
 
-## Deployment Considerations
-
-- **Docker**: Production-ready with health checks and proper security
-- **Cloud platforms**: Ready for AWS ECS, Google Cloud Run, Azure Container Instances
-- **Scaling**: Stateless design allows horizontal scaling
-- **Monitoring**: Health endpoints and structured logging for observability
-
-## Documentation for Context
-
-Always use context7 when I need code generation, setup or configuration steps, or
-library/API documentation. This means you should automatically use the Context7 MCP
-tools to resolve library id and get library docs without me having to explicitly ask.
+**Use Context7 MCP tools** for HubSpot API documentation and code generation assistance.
