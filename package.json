@@ -1,0 +1,47 @@
+{
+  "name": "hubspot-csv-integration",
+  "version": "1.0.0",
+  "description": "HubSpot CSV integration for account/contact management",
+  "main": "src/api/server.js",
+  "bin": {
+    "hubspot-csv-import": "./src/cli/cli.js"
+  },
+  "scripts": {
+    "start": "node src/api/server.js",
+    "dev": "node src/api/server.js",
+    "process-csv": "node src/cli/cli.js",
+    "process-large": "node src/core/integration.js",
+    "daily-import": "node src/cli/cli.js",
+    "test": "jest",
+    "oauth-auth": "echo 'Please use HubSpot CLI: hs auth' && echo 'Then run OAuth setup script'",
+    "oauth-status": "echo 'Check .oauth-tokens.json file for token status'",
+    "production-deploy": "cd docker && docker-compose up -d",
+    "production-logs": "cd docker && docker-compose logs -f",
+    "production-stop": "cd docker && docker-compose down",
+    "health": "curl http://localhost:3000/health || echo 'Server not running'",
+    "docs": "curl http://localhost:3000/api/docs || echo 'Server not running'"
+  },
+  "keywords": [
+    "hubspot",
+    "csv",
+    "integration",
+    "contacts",
+    "accounts",
+    "api",
+    "docker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@hubspot/api-client": "^11.2.0",
+    "@hubspot/cli": "^7.8.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  }
+}

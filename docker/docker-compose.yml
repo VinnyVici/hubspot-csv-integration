@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  hubspot-csv-integration:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: hubspot-csv-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Set these environment variables
+      - HUBSPOT_ACCESS_TOKEN=${HUBSPOT_ACCESS_TOKEN}
+      - HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID=${HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID}
+    volumes:
+      # Optional: Mount a volume for logs
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
