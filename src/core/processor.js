@@ -39,7 +39,9 @@ class HighPerformanceProcessor {
 
   parseCSVString(csvData) {
     // Parse CSV string directly for tests
-    const lines = csvData.split('\n').filter(line => line.trim());
+    // Handle both actual newlines and escaped newlines
+    const normalizedData = csvData.replace(/\\n/g, '\n');
+    const lines = normalizedData.split('\n').filter(line => line.trim());
     if (lines.length === 0) return [];
     
     const headers = lines[0].split(',').map(h => h.trim());

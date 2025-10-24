@@ -20,7 +20,9 @@ describe('End-to-End Integration Tests', () => {
       batchSearchContacts: jest.fn().mockResolvedValue([]),
       batchCreateAccounts: jest.fn().mockResolvedValue(mockBatchCreateResponse.results),
       batchCreateContacts: jest.fn().mockResolvedValue(mockBatchCreateResponse.results),
-      batchCreateAssociations: jest.fn().mockResolvedValue([])
+      batchCreateAssociations: jest.fn().mockResolvedValue([]),
+      identifyDeactivations: jest.fn().mockResolvedValue([]),
+      batchUpdateAccounts: jest.fn().mockResolvedValue([])
     };
 
     // Create real processor (unit tested separately)
