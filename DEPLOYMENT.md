@@ -1,22 +1,22 @@
 # HubSpot CSV Integration - Complete Deployment Guide
 
-> **Ready-to-deploy guide for developers. No prior HubSpot knowledge required.**
+Ready-to-deploy guide for developers. No prior HubSpot knowledge required.
 
-## 🎯 What This Does
+## Overview
 
-Processes CSV files to create/update HubSpot records with **6,000x performance improvement**:
-- Creates custom "Accounts" objects from `user_id` data
-- Creates/updates Contacts from `email` data  
+Processes CSV files to create and update HubSpot records with 6,000x performance improvement:
+- Creates custom "Accounts" objects from user_id data
+- Creates and updates Contacts from email data  
 - Automatically associates Contacts with Accounts
-- Supports 24 records/second with smart filtering
+- Supports 24 records per second with smart filtering
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 18+ installed
 - HubSpot account with admin access
 - Docker (for production deployment)
 
-## ⚡ Quick Start (5 minutes)
+## Quick Start (5 minutes)
 
 ### 1. Clone and Install
 ```bash
@@ -38,10 +38,10 @@ npm install
    - **Copy the access token** (starts with `pat-na1-...`)
 
 2. **Create Custom Object (Accounts):**
-   - Go to HubSpot → Settings → Data Management → Objects
+   - Navigate to HubSpot → Settings → Data Management → Objects
    - Click "Create custom object"
    - Name: `Accounts`
-   - Properties needed:
+   - Required Properties:
      ```
      id (Text) - Primary property
      account_type (Dropdown) - Options: MP, USAMPS
@@ -77,7 +77,7 @@ npm run process-csv test.csv
 rm test.csv
 ```
 
-## 🚀 Production Deployment Options
+## Production Deployment Options
 
 ### Option A: Direct Server Deployment
 
@@ -114,7 +114,7 @@ rm test.csv
 3. Expose port 3000
 4. Configure health check endpoint: `/health`
 
-## 📊 Usage After Deployment
+## Usage After Deployment
 
 ### CLI Processing (Direct CSV files)
 ```bash
@@ -137,7 +137,7 @@ curl -X POST http://your-server:3000/api/process-csv \
   -d '{"csvData": "user_id,email,...\nUSER1,user@example.com,..."}'
 ```
 
-## 📋 CSV Format Requirements
+## CSV Format Requirements
 
 **Your CSV must have these exact column names:**
 ```csv
@@ -153,17 +153,17 @@ _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_
 - `active_sub`: `TRUE`/`FALSE` → boolean
 - Subscription counts: converted to numbers
 
-## 🔧 Environment Variables Reference
+## Environment Variables Reference
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `HUBSPOT_ACCESS_TOKEN` | ✅ | HubSpot private app token | `pat-na1-abc123...` |
-| `HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID` | ✅ | Custom object type ID | `2-123456` |
-| `PORT` | ❌ | Server port (default: 3000) | `3000` |
-| `ENVIRONMENT` | ❌ | Environment name | `production` |
-| `LOG_LEVEL` | ❌ | Logging level | `info` |
+| `HUBSPOT_ACCESS_TOKEN` | Required | HubSpot private app token | `pat-na1-abc123...` |
+| `HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID` | Required | Custom object type ID | `2-123456` |
+| `PORT` | Optional | Server port (default: 3000) | `3000` |
+| `ENVIRONMENT` | Optional | Environment name | `production` |
+| `LOG_LEVEL` | Optional | Logging level | `info` |
 
-## 📈 Performance & Monitoring
+## Performance & Monitoring
 
 **Expected Performance:**
 - Processing rate: ~24 records/second
@@ -180,7 +180,7 @@ _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_
 - Detailed error reporting in response
 - Automatic retry for authentication failures
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Common Issues:
 
@@ -210,14 +210,14 @@ _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_
 3. Verify HubSpot API limits (10 requests/second)
 4. Test with small CSV file first
 
-## 🔒 Security Notes
+## Security Notes
 
 - Never commit `.env` files to git
 - Rotate HubSpot tokens regularly
 - Use HTTPS in production
 - Monitor API usage in HubSpot
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **API Documentation:** Available at `/api/docs` when server is running
 - **HubSpot API Docs:** [developers.hubspot.com](https://developers.hubspot.com)
@@ -225,7 +225,7 @@ _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_
 
 ---
 
-## 🎯 Handoff Checklist
+## Handoff Checklist
 
 For developer taking over:
 

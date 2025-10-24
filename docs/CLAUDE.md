@@ -1,15 +1,15 @@
-# CLAUDE.md - Development Context
+# Development Context
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## Project Overview
 
 HubSpot CSV integration with enterprise-grade performance optimization:
-1. **CLI Mode** - Direct Node.js script execution (`src/cli/cli.js`)
-2. **HTTP API** - Containerized web service (`src/api/server.js`)
-3. **Docker** - Production containerization (`docker/`)
+1. **CLI Mode** - Direct Node.js script execution (src/cli/cli.js)
+2. **HTTP API** - Containerized web service (src/api/server.js)
+3. **Docker** - Production containerization (docker/)
 
-Processes CSV files to create/update HubSpot Accounts and Contacts with automatic associations.
+Processes CSV files to create and update HubSpot Accounts and Contacts with automatic associations.
 
 ## Core Architecture
 
@@ -44,35 +44,35 @@ cd docker && docker-compose up -d   # Docker deployment
 ## Environment Configuration
 
 **Required Variables:**
-- `HUBSPOT_ACCESS_TOKEN` - HubSpot private app token  
-- `HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID` - Custom object ID (format: `2-123456`)
+- HUBSPOT_ACCESS_TOKEN - HubSpot private app token  
+- HUBSPOT_ACCOUNTS_OBJECT_TYPE_ID - Custom object ID (format: 2-123456)
 
 **Setup:** See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete HubSpot private app configuration.
 
 ## CSV Data Processing
 
-**Account Creation (Primary: `user_id`):**
-- `user_type`: MP→MP, WIX→USAMPS  
-- `active_sub` → `active_subscription` (boolean)
+**Account Creation (Primary: user_id):**
+- user_type: MP→MP, WIX→USAMPS  
+- active_sub → active_subscription (boolean)
 - Subscription counts → number fields
-- Ignored: `email`, `total_sub_count`, `_id`
+- Ignored: email, total_sub_count, _id
 
-**Contact Creation (Primary: `email`):**
-- `user_type`: Mapped same as accounts (multiselect)
+**Contact Creation (Primary: email):**
+- user_type: Mapped same as accounts (multiselect)
 - Automatic association with matching Account
 
 **Workflow:**
-1. Update existing Accounts (by `user_id`)
+1. Update existing Accounts (by user_id)
 2. Create new Accounts if needed
-3. Search/create Contacts (by `email`)  
+3. Search/create Contacts (by email)  
 4. Associate Contacts with Accounts
 
 ## API Endpoints
 
-- `GET /health` - Health check
-- `GET /api/docs` - API documentation  
-- `POST /api/process-csv` - Process CSV data
-- `POST /api/upload-csv` - Upload CSV file
+- GET /health - Health check
+- GET /api/docs - API documentation  
+- POST /api/process-csv - Process CSV data
+- POST /api/upload-csv - Upload CSV file
 
 ## File Structure
 
@@ -93,4 +93,4 @@ tests/        # Test suite
 
 ## Development Context
 
-**Use Context7 MCP tools** for HubSpot API documentation and code generation assistance.
+Use Context7 MCP tools for HubSpot API documentation and code generation assistance.

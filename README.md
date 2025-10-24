@@ -1,10 +1,8 @@
 # HubSpot CSV Integration
 
-> **Enterprise-grade CSV processing with 6,000x performance optimization**
+Enterprise-grade CSV processing solution with 6,000x performance optimization. Processes CSV files to create and update HubSpot Accounts and Contacts with automatic associations, transforming raw subscription data into structured HubSpot records through intelligent batch processing.
 
-Processes CSV files to create/update HubSpot Accounts and Contacts with automatic associations. Transforms raw subscription data into structured HubSpot records with intelligent batch processing.
-
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Clone and install
@@ -23,21 +21,21 @@ npm run process-csv your-file.csv
 npm start
 ```
 
-**📖 Complete setup guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step HubSpot configuration.
+**Complete setup guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step HubSpot configuration.
 
-## ✨ Key Features
+## Key Features
 
-- **🏎️ High Performance**: 6,000x faster than traditional processing (6 seconds vs 5.6 hours)
-- **🎯 Smart Filtering**: Only processes active subscriptions + deactivations (99.7% operation reduction)
-- **📦 Batch Processing**: Uses HubSpot's batch APIs for maximum efficiency
-- **🔄 OAuth 2.0**: Secure authentication with automatic token refresh
-- **⚡ Rate Optimized**: Respects HubSpot's API limits while maximizing throughput
-- **🛡️ Error Resilient**: Comprehensive error handling and recovery
-- **📊 Real-time Metrics**: Processing statistics and performance monitoring
+- **High Performance**: 6,000x faster than traditional processing (6 seconds vs 5.6 hours)
+- **Smart Filtering**: Only processes active subscriptions and status changes (99.7% operation reduction)
+- **Batch Processing**: Utilizes HubSpot's batch APIs for maximum efficiency
+- **Secure Authentication**: HubSpot private app authentication with automatic token management
+- **Rate Optimized**: Respects HubSpot's API limits while maximizing throughput
+- **Error Resilient**: Comprehensive error handling and recovery mechanisms
+- **Real-time Metrics**: Processing statistics and performance monitoring
 
-## 📋 CSV Format Requirements
+## CSV Format Requirements
 
-Your CSV must contain these exact columns:
+Input CSV files must contain these exact column headers:
 
 ```csv
 _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_sub_count,daily_sub_count
@@ -46,12 +44,12 @@ _id,email,user_id,user_type,active_sub,total_sub_count,weekly_sub_count,monthly_
 ```
 
 ### Data Processing:
-- **Creates HubSpot Accounts** from `user_id` (MP→MP, WIX→USAMPS)
-- **Creates HubSpot Contacts** from `email` addresses
-- **Associates Contacts with Accounts** automatically
-- **Smart filtering**: Only processes active subscriptions + status changes
+- **HubSpot Accounts Creation**: Generated from `user_id` field (MP→MP, WIX→USAMPS mapping)
+- **HubSpot Contacts Creation**: Generated from `email` addresses
+- **Automatic Association**: Contacts are automatically associated with corresponding Accounts
+- **Smart Filtering**: Processing limited to active subscriptions and status changes only
 
-## 🔧 Environment Setup
+## Environment Setup
 
 ```env
 # HubSpot Authentication (see DEPLOYMENT.md for setup)
@@ -63,11 +61,11 @@ PORT=3000
 ENVIRONMENT=production
 ```
 
-**⚠️ Setup Required:** See [DEPLOYMENT.md](DEPLOYMENT.md) for complete HubSpot configuration steps.
+**Configuration Required:** See [DEPLOYMENT.md](DEPLOYMENT.md) for complete HubSpot configuration steps.
 
-## 📖 Usage Modes
+## Usage Modes
 
-### 1. Command Line (Direct CSV Processing)
+### 1. Command Line Interface
 ```bash
 # Process any CSV file
 npm run process-csv data.csv
@@ -76,7 +74,7 @@ npm run process-csv data.csv
 npm run daily-import today-report.csv
 ```
 
-### 2. HTTP API (Web Integration)
+### 2. HTTP API Integration
 ```bash
 # Start server
 npm start
@@ -90,19 +88,19 @@ curl -X POST http://localhost:3000/api/process-csv \
   -d '{"csvData": "user_id,email,user_type,active_sub,weekly_sub_count,monthly_sub_count,daily_sub_count\n12345,test@example.com,MP,true,5,2,1"}'
 ```
 
-### 3. Docker (Production Deployment)
+### 3. Docker Deployment
 ```bash
 cd docker && docker-compose up -d
 ```
 
-## 📊 Performance
+## Performance Metrics
 
-- **Speed**: ~24 records/second with smart filtering
+- **Processing Speed**: Approximately 24 records per second with smart filtering
 - **Efficiency**: 99.7% operation reduction (processes only changes)
-- **Scale**: 30K+ records in ~6 seconds
-- **Reliability**: Respects HubSpot API limits, automatic retry logic
+- **Scale**: 30,000+ records processed in approximately 6 seconds
+- **Reliability**: Respects HubSpot API limits with automatic retry logic
 
-## 🔍 Monitoring
+## Monitoring
 
 ```bash
 # Health check
@@ -112,7 +110,7 @@ curl http://localhost:3000/health
 curl http://localhost:3000/api/docs
 ```
 
-## 🛠️ Available Commands
+## Available Commands
 
 | Command | Purpose |
 |---------|---------|
@@ -121,17 +119,72 @@ curl http://localhost:3000/api/docs
 | `npm start` | Start HTTP API server |
 | `npm test` | Run test suite |
 
-## 🔄 Automation Examples
+## Automation Examples
 
-**Cron Job (Daily Processing):**
+### Cron Job with API Data Fetching
+
 ```bash
-0 6 * * * cd /path/to/project && npm run daily-import /data/daily-report.csv
+#!/bin/bash
+# /usr/local/bin/hubspot-csv-sync.sh
+
+# Configuration
+API_ENDPOINT="https://api.example.com/export/subscribers"
+API_KEY="your-api-key"
+PROJECT_PATH="/opt/hubspot-csv-integration"
+TEMP_DIR="/tmp/hubspot-sync"
+LOG_FILE="/var/log/hubspot-sync.log"
+
+# Create temporary directory
+mkdir -p "$TEMP_DIR"
+
+# Fetch CSV data from API endpoint
+echo "$(date): Fetching CSV data from API" >> "$LOG_FILE"
+curl -H "Authorization: Bearer $API_KEY" \
+     -H "Accept: text/csv" \
+     -o "$TEMP_DIR/daily-export.csv" \
+     "$API_ENDPOINT" || {
+    echo "$(date): Failed to fetch CSV data" >> "$LOG_FILE"
+    exit 1
+}
+
+# Verify CSV has content
+if [ ! -s "$TEMP_DIR/daily-export.csv" ]; then
+    echo "$(date): CSV file is empty, skipping processing" >> "$LOG_FILE"
+    exit 0
+fi
+
+# Process CSV with HubSpot integration
+echo "$(date): Processing CSV with HubSpot integration" >> "$LOG_FILE"
+cd "$PROJECT_PATH"
+npm run process-csv "$TEMP_DIR/daily-export.csv" >> "$LOG_FILE" 2>&1
+
+# Clean up
+rm -f "$TEMP_DIR/daily-export.csv"
+echo "$(date): Processing completed" >> "$LOG_FILE"
 ```
 
-**Webhook Integration:**
-The HTTP API supports webhooks for real-time processing from external systems.
+**Crontab Configuration:**
+```bash
+# Daily at 6:00 AM
+0 6 * * * /usr/local/bin/hubspot-csv-sync.sh
 
-## 🏗️ Architecture
+# Every 4 hours for high-frequency updates
+0 */4 * * * /usr/local/bin/hubspot-csv-sync.sh
+```
+
+### HTTP API Integration
+
+The HTTP API supports direct integration with external systems:
+
+```bash
+# Send CSV data directly from API response
+curl -s "https://api.example.com/export/subscribers" | \
+curl -X POST http://localhost:3000/api/process-csv \
+  -H "Content-Type: application/json" \
+  -d @- --data-urlencode "csvData=$(cat)"
+```
+
+## Architecture
 
 ```
 src/
@@ -143,28 +196,28 @@ src/
 └── cli/            # Command-line interface
 ```
 
-**Key Features:**
+**Technical Features:**
 - Smart filtering (processes only changes)
-- Batch operations (100 records/call)
+- Batch operations (100 records per call)
 - Automatic retry and rate limiting
 - Contact-account association management
 
-## 🎯 Production Ready
+## Production Ready
 
-✅ **Tested** - Comprehensive test suite with CI/CD  
-✅ **Optimized** - 6,000x performance improvement  
-✅ **Scalable** - Docker deployment ready  
-✅ **Reliable** - Error handling and recovery  
-✅ **Documented** - Complete deployment guide  
+- **Tested**: Comprehensive test suite with CI/CD pipeline
+- **Optimized**: 6,000x performance improvement over traditional methods
+- **Scalable**: Docker deployment ready for cloud platforms
+- **Reliable**: Comprehensive error handling and recovery mechanisms
+- **Documented**: Complete deployment and configuration guide
 
-## 📞 Getting Help
+## Support
 
-1. **Setup Issues**: See [DEPLOYMENT.md](DEPLOYMENT.md)
-2. **API Errors**: Check `/health` endpoint and HubSpot token
-3. **CSV Format**: Verify column names match exactly
+1. **Setup Issues**: Refer to [DEPLOYMENT.md](DEPLOYMENT.md)
+2. **API Errors**: Check `/health` endpoint and verify HubSpot token
+3. **CSV Format**: Ensure column names match requirements exactly
 4. **Performance**: Monitor processing logs for bottlenecks
 
 ---
 
-**📖 Complete setup guide:** [DEPLOYMENT.md](DEPLOYMENT.md)  
-**🚀 Ready for enterprise-scale CSV processing!**
+**Complete setup guide:** [DEPLOYMENT.md](DEPLOYMENT.md)  
+**Enterprise-scale CSV processing solution**
